@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<!--
+  App: Digital Signage Player
+  Version: 0.1.0
+  Description: Custom Manifest V3 Kiosk Signage Player for ChromeOS.
+               Dynamically renders split-screen iframe zones based on 
+               managed JSON policies pushed from the Google Admin Console.
+  Note: Ensure version matches the 'version' field in manifest.json and update.xml.
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Digital Signage Player</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    html, body {
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      background-color: #000;
+      color: #fff;
+      font-family: sans-serif;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .signage-zone {
+      position: absolute;
+      border: none;
+      outline: none;
+    }
+    #status-message {
+      z-index: 10;
+      text-align: center;
+      padding: 2rem;
+      font-size: 1.5rem;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div id="status-message">Loading configuration from Google Admin Console...</div>
+  
+  <script>
+    function renderSignage(config) {
+      const statusDiv = document.getElementById('status-message');
+      
+      // Check if valid JSON structure exists
+      if (!config || !config.schedule || !config.schedule.Value || !config.schedule.Value[0].items) {
+        statusDiv.textContent = "Awaiting JSON configuration. Please add the policy payload in Google Admin.";
+        statusDiv.style.display = 'block';
+        return;
+      }
+
+      // Hide status message once configuration is received
+      statusDiv.style.display = 'none';
+      const items = config.schedule.Value[0].items;
+
+      items.forEach((item, index) => {
+        const iframe = document.createElement('iframe');
+        iframe.className = 'signage-zone';
+        iframe.id = `zone-frame-${index}`;
+        iframe.src = item.content;
+        iframe.style.width = item.zoneWidth || "100%";
+        iframe.style.height = item.zoneHeight || "100%";
+        iframe.style.left = item.zoneXOffset || "0";
+        
+        // Handle Y offset stacking for multi-zone layouts
+        iframe.style.top = (item.zoneYOffset === "0" && index > 0) ? `${index * 50}%` : (item.zoneYOffset || "0");
+
+        document.body.appendChild(iframe);
+
+        // Apply zone-specific auto-reload intervals
+        if (item.autoReload && item.autoReload > 0) {
+          setInterval(() => {
+            iframe.src = item.content;
+          }, item.autoReload);
+        }
+      });
+    }
+
+    // Initialize and read the policy
+    if (chrome.storage && chrome.storage.managed) {
+      chrome.storage.managed.get(['schedule'], function(result) {
+        if (chrome.runtime.lastError) {
+          document.getElementById('status-message').textContent = "Error reading policy: " + chrome.runtime.lastError.message;
+        } else {
+          renderSignage(result);
+        }
+      });
+      
+      // Listen for live updates if you change the JSON in Admin Console
+      chrome.storage.onChanged.addListener(function(changes, namespace) {
+        if (namespace === 'managed' && changes.schedule) {
+          document.querySelectorAll('iframe').forEach(el => el.remove());
+          renderSignage({ schedule: changes.schedule.newValue });
+        }
+      });
+    } else {
+      document.getElementById('status-message').textContent = "Extension must be deployed via Google Admin Console to receive policy data.";
+    }
+
+    // Hard page refresh every 24 hours to clear browser memory[cite: 16]
+    setTimeout(() => {
+      window.location.reload(true);
+    }, 24 * 60 * 60 * 1000);
+  </script>
+</body>
+</html>

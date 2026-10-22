@@ -1,0 +1,9 @@
+{
+  "type": "object",
+  "properties": {
+    "schedule": {
+      "type": "object",
+      "description": "JSON object defining zones, content URLs, reload rates, and layout proportions"
+    }
+  }
+}
