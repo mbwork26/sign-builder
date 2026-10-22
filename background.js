@@ -1,4 +1,5 @@
 // Launch player.html in a fullscreen window when ChromeOS Kiosk boots
+// v0.2.0
 function createKioskWindow() {
   chrome.windows.create({
     url: 'player.html',

@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "BPS14 Chrome Sign Builder",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "description": "Chrome Sign Builder replacement for multi-zone enterprise signage",
   "kiosk_enabled": true,
   "permissions": [
