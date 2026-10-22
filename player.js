@@ -1,7 +1,7 @@
 /**
  * BPS14 Chrome Sign Builder - Player Script
  * Handles managed policy loading, schedule parsing, and iframe rendering.
- * Version 0.2.0
+ * Version 0.2.1
  */
 
 document.addEventListener('DOMContentLoaded', () => {
