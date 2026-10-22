@@ -1,14 +1,20 @@
 /**
  * BPS14 Chrome Sign Builder - Player Script
  * Handles managed policy loading, schedule parsing, and iframe rendering.
- * Version 0.2.1
  */
+
+// Dynamically retrieve version from manifest.json (or fallback if running outside runtime context)
+const APP_VERSION = (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.getManifest)
+  ? chrome.runtime.getManifest().version
+  : '0.2.1';  //Current version from manifest.json and update.xml
 
 document.addEventListener('DOMContentLoaded', () => {
   initializePlayer();
 });
 
 function initializePlayer() {
+  console.log(`BPS14 Chrome Sign Builder running v${APP_VERSION}`);
+
   // Fetch initial managed configuration from Google Admin Console
   if (chrome.storage && chrome.storage.managed) {
     chrome.storage.managed.get(null, (config) => {
@@ -50,7 +56,7 @@ function renderSignage(config) {
 
   if (!hasValidItems) {
     container.innerHTML = '';
-    updateStatus('Awaiting JSON configuration. Please add the policy payload in Google Admin.');
+    updateStatus('Awaiting JSON configuration. Please add the policy payload in Google Admin. Current Version 0.2.1');
     return;
   }
 
